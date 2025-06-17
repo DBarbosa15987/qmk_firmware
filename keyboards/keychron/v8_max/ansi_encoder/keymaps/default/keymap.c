@@ -24,7 +24,8 @@ enum layers {
     WIN_BASE,
     MAC_FN1,
     WIN_FN1,
-    _FN2
+    _FN2,
+    _TMUX
 };
 
 #define MY_COPY LCTL(KC_INS)
@@ -65,7 +66,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 [WIN_BASE] = LAYOUT_ansi_69(
   KC_ESC         , KC_1    , KC_2 , KC_3    , KC_4   , KC_5    , KC_6 ,         KC_7     , KC_8   , KC_9    , KC_0    , KC_MINS , KC_EQL  ,      XXXXXXX      ,           KC_MUTE,
   KC_TAB         , KC_Q    , KC_W , KC_E    , KC_R   , KC_T    ,                KC_Y     , KC_U   , KC_I    , KC_O    , KC_P    , KC_LBRC , KC_RBRC , KC_BSLS ,           XXXXXXX,
-  LT(3, KC_CAPS) , KC_A    , KC_S , KC_D    , KC_F   , KC_G    ,                KC_H     , KC_J   , KC_K    , KC_L    , KC_SCLN , KC_QUOT ,      XXXXXXX      ,           XXXXXXX,
+  LT(5, KC_CAPS) , KC_A    , KC_S , KC_D    , KC_F   , KC_G    ,                KC_H     , KC_J   , KC_K    , KC_L    , KC_SCLN , KC_QUOT ,      MO(3)        ,           XXXXXXX,
   KC_LSFT        , KC_Z    , KC_X , KC_C    , KC_V   , KC_B    ,                MY_COPY  , KC_N   , KC_M    , KC_COMM , KC_DOT  , KC_SLSH , KC_RSFT , XXXXXXX                    ,
   KC_LCTL        , KC_LWIN ,        KC_LALT , KC_ENT , KC_BSPC ,                MO(_FN2) , KC_SPC , KC_RALT ,                               XXXXXXX , XXXXXXX , XXXXXXX
 ),
@@ -125,7 +126,15 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   _______ , KC_HOME , KC_WH_L , KC_PGDN , KC_PGUP , KC_WH_R ,                 KC_LEFT , KC_DOWN , KC_UP   , KC_RGHT , KC_END  , _______ ,      _______      ,           _______,
   _______ , _______ , _______ , _______ , _______ , _______ ,                 MY_PSTE , _______ , _______ , _______ , _______ , _______ , _______ , _______                    ,
   _______ , _______ ,           _______ , _______ , KC_DEL  ,                 _______ , _______ , _______ ,                               _______ , _______ , _______
-)
+),
+
+[_TMUX] = LAYOUT_ansi_69(
+    _______, _______,   _______,    _______,    _______,    _______,    _______,       _______, _______,    _______,    _______,    _______,    _______,                _______,                _______,
+    _______, _______,   _______,    _______,    _______,    _______,                   _______, _______,    _______,    _______,    _______,    _______,    _______,    _______,                _______,
+    _______, _______,   _______,    _______,    _______,    _______,                   _______, _______,    _______,    _______,    _______,    _______,                _______,                _______,
+    _______,            _______,    _______,    _______,    _______,    _______,       _______, _______,    _______,    _______,    _______,    _______,    _______,                _______,
+    _______, _______,               _______,                _______,    _______,       _______,             _______,                _______,                            _______,    _______,    _______),
+
 };
 
 
@@ -135,7 +144,6 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 //     _______, _______,   _______,    _______,    _______,    _______,                   _______, _______,    _______,    _______,    _______,    _______,                _______,                _______,
 //     _______,            _______,    _______,    _______,    _______,    _______,       _______, _______,    _______,    _______,    _______,    _______,    _______,                _______,
 //     _______, _______,               _______,                _______,    _______,       _______,             _______,                _______,                            _______,    _______,    _______),
-// };
 
 
 // clang-format on
@@ -146,12 +154,21 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][2] = {
     [MAC_FN1] = {ENCODER_CCW_CW(RGB_VAD, RGB_VAI)},
     [WIN_FN1] = {ENCODER_CCW_CW(KC_BRID, KC_BRIU)},
     [_FN2] = {ENCODER_CCW_CW(RGB_VAD, RGB_VAI)},
+    [_TMUX] = {ENCODER_CCW_CW(XXXXXXX,XXXXXXX)},
 };
 #endif // ENCODER_MAP_ENABLE
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     if (!process_record_keychron_common(keycode, record)) {
         return false;
+    }
+    if (IS_LAYER_ON(_TMUX) && record->event.pressed) {
+      if (!(keycode >= KC_LCTL && keycode <= KC_RGUI)) {
+          // Send Ctrl + B before sending the actual key
+          register_code(KC_LCTL);
+          tap_code(KC_B);
+          unregister_code(KC_LCTL);
+      }
     }
     return true;
 }
